@@ -59,6 +59,11 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    @Override
+    public void logout(String token) {
+        jwtService.revokeToken(token);
+    }
+
     private boolean isProfileCompleted(User user) {
         return hasText(user.getFirstName())
                 && hasText(user.getLastName())

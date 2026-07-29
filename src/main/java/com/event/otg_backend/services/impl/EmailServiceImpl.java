@@ -27,9 +27,8 @@ public class EmailServiceImpl implements EmailService {
             message.setTo(toEmail);
             message.setSubject("OTG Verification Code");
             message.setText(
-                    "Your OTP is:" + otp + "\n\n"+
-                            "This code is valid for 5 minutes."+
-                            "Please do not share it with anyone.\n\n"+
+                    "Your OTP is:  " + otp + "\n\n"+
+                            "This code is valid for 5 minutes. "+ "Please do not share it with anyone.\n\n"+
                             "If you didn't request this, you can safely ignore this email."
             );
             mailSender.send(message);

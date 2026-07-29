@@ -8,4 +8,6 @@ public interface AuthService {
     void requestOtp(String email);
 
     AuthResponseDto verifyOtpAndAuthenticate(String email, String otp);
+
+    void logout(String token);
 }
