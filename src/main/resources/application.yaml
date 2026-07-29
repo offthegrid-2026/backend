@@ -1,0 +1,11 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: otg-backend
+  profiles:
+    active:
+      - dev
+
+server:
+  port: 8080

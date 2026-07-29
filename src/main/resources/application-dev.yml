@@ -1,0 +1,50 @@
+#development version of configuration
+
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/otg
+    username: postgres
+    password: agartala
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format-sql: true
+    show-sql: true
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connection-timeout: 5000
+          timeout: 5000
+          write-timeout: 5000
+
+  app:
+    jwt:
+      secret: ${JWT_SECRET_KEY}
+      expiration-ms: 604800000
+    otp:
+      expiry-minutes: 5
+      max-requests-per-window: 3
+      request-window-minutes: 10
+      max-verify-attempts: 5
