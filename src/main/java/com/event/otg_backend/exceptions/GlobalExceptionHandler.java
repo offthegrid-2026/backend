@@ -90,4 +90,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errorResponse);
     }
 
+    @ExceptionHandler(ProfileLockedException.class)
+    public  ResponseEntity<ErrorResponse> handleProfileLockedException(ProfileLockedException exception){
+        ErrorResponse errorResponse = new ErrorResponse(exception.getMessage(), HttpStatus.CONFLICT);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+    }
+
 }

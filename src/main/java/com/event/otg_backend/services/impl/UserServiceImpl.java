@@ -2,7 +2,9 @@ package com.event.otg_backend.services.impl;
 
 import com.event.otg_backend.dtos.ProfileUpdateDto;
 import com.event.otg_backend.dtos.UserDto;
+import com.event.otg_backend.exceptions.ProfileLockedException;
 import com.event.otg_backend.exceptions.ResourceNotFoundException;
+import com.event.otg_backend.helpers.ProfileCompletionChecker;
 import com.event.otg_backend.models.User;
 import com.event.otg_backend.repository.UserRepository;
 import com.event.otg_backend.services.UserService;
@@ -11,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +52,10 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(()-> new ResourceNotFoundException("User Not Found"));
 
 
+        if(ProfileCompletionChecker.isComplete(user)){
+            throw new ProfileLockedException();
+        }
+
         if(dto.getFirstName() != null)
             user.setFirstName(dto.getFirstName());
         if(dto.getLastName() != null)
@@ -76,10 +81,4 @@ public class UserServiceImpl implements UserService {
         user.setPaymentStatus(true);
         userRepository.save(user);
     }
-
-
-
-
-
-
 }

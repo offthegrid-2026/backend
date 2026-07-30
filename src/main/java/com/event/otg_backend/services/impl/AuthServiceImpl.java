@@ -3,6 +3,7 @@ package com.event.otg_backend.services.impl;
 import com.event.otg_backend.dtos.AuthResponseDto;
 import com.event.otg_backend.exceptions.EmailSendException;
 import com.event.otg_backend.helpers.JwtService;
+import com.event.otg_backend.helpers.ProfileCompletionChecker;
 import com.event.otg_backend.models.User;
 import com.event.otg_backend.repository.UserRepository;
 import com.event.otg_backend.services.AuthService;
@@ -55,21 +56,13 @@ public class AuthServiceImpl implements AuthService {
                 .token(token)
                 .userId(user.getId())
                 .email(user.getEmail())
-                .profileCompleted(isProfileCompleted(user))
+                .profileCompleted(ProfileCompletionChecker.isComplete(user))
                 .build();
     }
 
     @Override
     public void logout(String token) {
         jwtService.revokeToken(token);
-    }
-
-    private boolean isProfileCompleted(User user) {
-        return hasText(user.getFirstName())
-                && hasText(user.getLastName())
-                && hasText(user.getPhoneNumber())
-                && hasText(user.getCity())
-                && hasText((user.getCollegeOrOrg()));
     }
 
     private User createBareUser(String email) {
@@ -81,9 +74,5 @@ public class AuthServiceImpl implements AuthService {
 
     private String normalize(String email) {
         return email.trim().toLowerCase();
-    }
-
-    private boolean hasText(String value) {
-        return value != null && !value.isBlank();
     }
 }
