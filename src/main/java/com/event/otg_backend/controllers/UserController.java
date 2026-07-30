@@ -1,13 +1,13 @@
 package com.event.otg_backend.controllers;
 
+import com.event.otg_backend.dtos.ProfileUpdateDto;
 import com.event.otg_backend.dtos.UserDto;
+import com.event.otg_backend.helpers.CurrentUserProvider;
 import com.event.otg_backend.services.UserService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -17,15 +17,19 @@ public class UserController {
     private final UserService userService;
 
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<UserDto> getUserById(@PathVariable Long userId){
+    //fetch user details
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getCurrentUser(){
+        Long userId = CurrentUserProvider.getCurrentUserId();
         return ResponseEntity.ok(userService.getUserById(userId));
     }
 
 
-    //just for checking
-    @PatchMapping("/{userId}")
-    public void markPaymentAsPaid(@PathVariable Long userId){
-        userService.markPaymentAsPaid(userId);
+    //update profile
+    @PatchMapping("/me")
+    public ResponseEntity<UserDto> updateProfile(@Valid @RequestBody ProfileUpdateDto request){
+        Long userId = CurrentUserProvider.getCurrentUserId();
+        return ResponseEntity.ok(userService.updateProfile(userId, request));
     }
 }
+
