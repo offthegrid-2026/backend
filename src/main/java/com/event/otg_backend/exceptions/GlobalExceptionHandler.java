@@ -96,4 +96,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
     }
 
+    @ExceptionHandler({
+            ProfileIncompleteException.class,
+            TicketSaleClosedException.class,
+            TicketSoldOutException.class,
+            AlreadyPaidException.class
+    })
+    public ResponseEntity<ErrorResponse> handlePaymentConflict(RuntimeException exception){
+        ErrorResponse error = new ErrorResponse(exception.getMessage(), HttpStatus.CONFLICT);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(PaymentException.class)
+    public ResponseEntity<ErrorResponse> handlePaymentException(PaymentException exception){
+        ErrorResponse error = new ErrorResponse(exception.getMessage(), HttpStatus.BAD_GATEWAY);
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(error);
+    }
+
 }
