@@ -35,4 +35,7 @@ public class Ticket {
 
     @Column(unique = true, nullable = false, length = 20)
     private String ticketCode;
+
+    @Column(length = 30)
+    private String ticketTypeCode;
 }

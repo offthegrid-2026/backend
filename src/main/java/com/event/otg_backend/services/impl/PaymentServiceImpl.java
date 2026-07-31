@@ -1,19 +1,20 @@
 package com.event.otg_backend.services.impl;
 
 import com.event.otg_backend.dtos.CreateOrderResponseDto;
+import com.event.otg_backend.dtos.PaymentVerificationDto;
+import com.event.otg_backend.dtos.VerifyPaymentResponseDto;
 import com.event.otg_backend.exceptions.*;
 import com.event.otg_backend.helpers.ProfileCompletionChecker;
-import com.event.otg_backend.models.Payment;
-import com.event.otg_backend.models.PaymentStatus;
-import com.event.otg_backend.models.TicketType;
-import com.event.otg_backend.models.User;
+import com.event.otg_backend.models.*;
 import com.event.otg_backend.repository.PaymentRepository;
 import com.event.otg_backend.repository.TicketTypeRepository;
 import com.event.otg_backend.repository.UserRepository;
 import com.event.otg_backend.services.PaymentService;
+import com.event.otg_backend.services.TicketService;
 import com.razorpay.Order;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
+import com.razorpay.Utils;
 import lombok.RequiredArgsConstructor;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,10 +31,14 @@ public class PaymentServiceImpl implements PaymentService {
     private final UserRepository userRepository;
     private final TicketTypeRepository ticketTypeRepository;
     private final PaymentRepository paymentRepository;
+    private final TicketService ticketService;
     private final RazorpayClient razorpayClient;
 
     @Value("${spring.app.razorpay.key-id}")
     private String razorpayKeyId;
+
+    @Value("${spring.app.razorpay.key-secret}")
+    private String razorpayKeySecret;
 
     @Value("${spring.app.payment.currency}")
     private String currency;
@@ -95,6 +100,55 @@ public class PaymentServiceImpl implements PaymentService {
                 .razorpayKeyId(razorpayKeyId)
                 .ticketType(ticketTypeCode)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public VerifyPaymentResponseDto verifyPayment(Long userId, PaymentVerificationDto dto) {
+
+        if(!isSignatureValid(dto)){
+            throw new PaymentVerificationException("Payment Verification Failed.");
+        }
+
+        Ticket ticket = confirmPaidOrder(dto.getRazorpayOrderId(), dto.getRazorpayPaymentId(), userId);
+
+        return VerifyPaymentResponseDto.builder()
+                .success(true)
+                .ticketCode(ticket.getTicketCode())
+                .message("Payment Successful. Your ticket is confirmed.")
+                .build();
+    }
+
+    private Ticket confirmPaidOrder(String orderId, String paymentId, Long expectedUserId) {
+
+        Payment payment = paymentRepository.findByRazorpayOrderIdForUpdate(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found."));
+
+        if(expectedUserId != null && !payment.getUser().getId().equals(expectedUserId)){
+            throw new PaymentVerificationException("This order doesn't belong to you.");
+        }
+
+        if (payment.getStatus() == PaymentStatus.PAID){
+            return ticketService.generateTicketForUser(payment.getUser(), payment.getTicketTypeCode(), payment.getAmountPaise());
+        }
+
+        payment.setRazorpayPaymentId(paymentId);
+        payment.setStatus(PaymentStatus.PAID);
+        paymentRepository.save(payment);
+
+        return ticketService.generateTicketForUser(payment.getUser(), payment.getTicketTypeCode(), payment.getAmountPaise());
+
+    }
+
+    private boolean isSignatureValid(PaymentVerificationDto dto) {
+        try {
+            JSONObject options = new JSONObject();
+            options.put("razorpay_order_id", dto.getRazorpayOrderId());
+            options.put("razorpay_payment_id", dto.getRazorpayPaymentId());
+            options.put("razorpay_signature", dto.getRazorpaySignature());
+            return Utils.verifyPaymentSignature(options, razorpayKeySecret);
+        }catch (RazorpayException e){
+            return false;
+        }
     }
 
     private Order createRazorpayOrder(TicketType type, User user) {
