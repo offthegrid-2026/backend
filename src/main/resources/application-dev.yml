@@ -48,3 +48,10 @@ spring:
       max-requests-per-window: 3
       request-window-minutes: 10
       max-verify-attempts: 5
+    razorpay:
+      key-id: ${RAZORPAY_KEY_ID}
+      key-secret: ${RAZORPAY_KEY_SECRET}
+      webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+    payment:
+      currency: INR
+      reservation-hold-minutes: 10
