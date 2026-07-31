@@ -13,7 +13,6 @@ public interface TicketTypeRepository  extends JpaRepository<TicketType, Long> {
 
     Optional<TicketType> findByCode(String code);
 
-
     // Used inside the seat-reservation transaction: locks this ticket_types row (SELECT ... FOR UPDATE)
     // so two concurrent orders can't both grab the last seat.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
