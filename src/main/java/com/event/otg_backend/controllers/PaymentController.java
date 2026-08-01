@@ -9,10 +9,7 @@ import com.event.otg_backend.services.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/payments")
@@ -31,6 +28,16 @@ public class PaymentController {
     public ResponseEntity<VerifyPaymentResponseDto> verify(@Valid @RequestBody PaymentVerificationDto request){
         Long userId = CurrentUserProvider.getCurrentUserId();
         return ResponseEntity.ok(paymentService.verifyPayment(userId, request));
+    }
+
+    @PostMapping("/webhook")
+    public ResponseEntity<String> webhook(
+            @RequestBody String payload,
+            @RequestHeader (value = "X-Razorpay-Signature", required = false)
+            String signature){
+
+        paymentService.handleWebhook(payload, signature);
+        return ResponseEntity.ok("OK");
     }
 
 }

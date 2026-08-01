@@ -1,6 +1,8 @@
 HELP.md
 CLAUDE.md
+.claude/
 .env
+logs/
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
