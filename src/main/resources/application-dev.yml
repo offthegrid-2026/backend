@@ -55,3 +55,18 @@ spring:
     payment:
       currency: INR
       reservation-hold-minutes: 10
+
+logging:
+  level:
+    root: INFO
+    com.event.otg_backend: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+  file:
+    name: logs/otg-backend.log
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,logfile

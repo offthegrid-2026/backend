@@ -10,4 +10,6 @@ public interface PaymentService {
 
     VerifyPaymentResponseDto verifyPayment(Long userId, PaymentVerificationDto dto);
 
+    void handleWebhook(String payload, String signature);
+
 }

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>OTG Live Logs</title>
+    <style>
+        :root { color-scheme: dark; }
+        * { box-sizing: border-box; }
+        body { margin:0; font-family: ui-monospace, Consolas, monospace; background:#0d0d0d; color:#ddd; }
+        header { display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:10px 14px;
+            background:#1a1a1a; border-bottom:1px solid #333; position:sticky; top:0; }
+        header h1 { font-size:14px; margin:0 10px 0 0; color:#fff; }
+        header input[type=text] { background:#000; color:#0f0; border:1px solid #444; padding:5px 8px; border-radius:4px; font:inherit; font-size:12px; }
+        header button { background:#2a2a2a; color:#ddd; border:1px solid #444; padding:5px 10px; border-radius:4px; cursor:pointer; font-size:12px; }
+        header button.active { background:#0b8457; color:#fff; border-color:#0b8457; }
+        #status { margin-left:auto; color:#888; font-size:12px; }
+        #log { padding:12px 14px; white-space:pre-wrap; word-break:break-word; font-size:12.5px; line-height:1.5;
+            height: calc(100vh - 52px); overflow:auto; }
+        .err{color:#ff6b6b} .warn{color:#ffd93d} .info{color:#6bcb77} .debug{color:#7aa2f7}
+    </style>
+</head>
+<body>
+<header>
+    <h1>OTG Live Logs</h1>
+    <input id="filter" type="text" placeholder="filter (e.g. ERROR, Razorpay)" oninput="render()" />
+    <button id="pauseBtn" onclick="togglePause()">⏸ Pause</button>
+    <button id="scrollBtn" class="active" onclick="toggleScroll()">⤓ Auto-scroll</button>
+    <button onclick="clearView()">🗑 Clear</button>
+    <span id="status">connecting…</span>
+</header>
+<div id="log">Loading…</div>
+
+<script>
+    const URL = '/actuator/logfile';
+    const INITIAL_TAIL = 200000;   // first load: last ~200KB
+    const INTERVAL = 2000;
+    const MAX_CHARS = 1000000;     // cap the in-memory buffer
+    let offset = 0, started = false, raw = '', paused = false, autoScroll = true;
+
+    async function poll(){
+        if (paused) return;
+        // First load: grab the tail. After that: ask only for bytes AFTER what we've seen.
+        const range = started ? ('bytes=' + offset + '-') : ('bytes=-' + INITIAL_TAIL);
+        try {
+            const res = await fetch(URL, { headers:{ 'Range': range }, cache:'no-store' });
+            if (res.status === 404){ setStatus('log file not found — is logging.file.name set?'); return; }
+
+            const cr = res.headers.get('Content-Range');                        // "bytes start-end/total"
+            const total = (cr && cr.includes('/')) ? parseInt(cr.split('/')[1], 10) : null;
+
+            if (res.status === 416){                                            // no new bytes
+                if (total != null && offset > total){ offset = 0; started = false; raw = ''; render(); } // file rolled
+                setStatus('up to date · ' + new Date().toLocaleTimeString());
+                return;
+            }
+            if (res.status !== 200 && res.status !== 206){ setStatus('HTTP '+res.status); return; }
+
+            const chunk = await res.text();
+            let newText;
+            if (!started) newText = chunk;                        // first load: the tail
+            else if (res.status === 206) newText = chunk;         // 206 -> only the new bytes
+            else newText = chunk.slice(offset);                   // 200 -> full file, skip what we've already shown
+            raw += newText;
+            if (raw.length > MAX_CHARS) raw = raw.slice(raw.length - MAX_CHARS);
+            offset = (total != null) ? total : offset + newText.length;         // advance to end of file
+            started = true;
+            render();
+            setStatus('updated ' + new Date().toLocaleTimeString());
+        } catch(e){ setStatus('offline (app not running?)'); }
+    }
+
+    function render(){
+        const el = document.getElementById('log');
+        if (raw === ''){ el.innerHTML = '<span style="color:#666">— cleared · waiting for new logs —</span>'; return; }
+        const f = document.getElementById('filter').value.trim().toLowerCase();
+        let lines = raw.split('\n');
+        if (f) lines = lines.filter(l => l.toLowerCase().includes(f));
+        el.innerHTML = lines.map(colorize).join('\n') || '<span style="color:#666">(no matching lines)</span>';
+        if (autoScroll) el.scrollTop = el.scrollHeight;
+    }
+
+    function colorize(line){
+        const s = line.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        if (/\bERROR\b/.test(line)) return '<span class="err">'+s+'</span>';
+        if (/\bWARN\b/.test(line))  return '<span class="warn">'+s+'</span>';
+        if (/\bDEBUG\b/.test(line)) return '<span class="debug">'+s+'</span>';
+        if (/\bINFO\b/.test(line))  return '<span class="info">'+s+'</span>';
+        return s;
+    }
+
+    function togglePause(){ paused=!paused; const b=document.getElementById('pauseBtn');
+        b.textContent = paused?'▶ Resume':'⏸ Pause'; b.classList.toggle('active',paused); if(!paused) poll(); }
+    function toggleScroll(){ autoScroll=!autoScroll; document.getElementById('scrollBtn').classList.toggle('active',autoScroll); }
+    function clearView(){ raw=''; render(); }
+    function setStatus(s){ document.getElementById('status').textContent = s; }
+
+    poll(); setInterval(poll, INTERVAL);
+</script>
+</body>
+</html>

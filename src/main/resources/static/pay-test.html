@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>OTG Payment Test</title>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; }
+        label { display:block; margin: 14px 0 4px; font-weight:600; }
+        input, select, button { width:100%; padding:10px; font-size:14px; box-sizing:border-box; }
+        button { margin-top:18px; background:#0b8457; color:#fff; border:0; border-radius:6px; cursor:pointer; }
+        pre { background:#111; color:#5f5; padding:12px; border-radius:6px; white-space:pre-wrap; word-break:break-all; margin-top:16px; }
+    </style>
+</head>
+<body>
+<h2>OTG Payment Test</h2>
+
+<label>JWT token (from <code>/verify-otp</code>)</label>
+<input id="jwt" placeholder="eyJ..." />
+
+<label>Ticket type</label>
+<select id="ticketType">
+    <option value="EARLY_BIRD">EARLY_BIRD</option>
+    <option value="NORMAL">NORMAL</option>
+</select>
+
+<button onclick="startPayment()">Create order &amp; pay</button>
+<pre id="log">Ready.</pre>
+
+<script>
+    function log(m){ document.getElementById('log').textContent += '\n' + (typeof m==='string'? m : JSON.stringify(m,null,2)); }
+
+    async function startPayment(){
+        const jwt = document.getElementById('jwt').value.trim();
+        const ticketType = document.getElementById('ticketType').value;
+        if(!jwt){ log('Paste your JWT first.'); return; }
+        document.getElementById('log').textContent = 'Creating order...';
+
+        // 1. Create the order on YOUR backend
+        let order;
+        try {
+            const res = await fetch('/api/v1/payments/orders', {
+                method:'POST',
+                headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+jwt },
+                body: JSON.stringify({ ticketType })
+            });
+            order = await res.json();
+            if(!res.ok){ log('Order failed ('+res.status+'):'); log(order); return; }
+            log('Order created:'); log(order);
+        } catch(e){ log('Order error: '+e); return; }
+
+        // 2. Open Razorpay Checkout for that order
+        const rzp = new Razorpay({
+            key: order.razorpayKeyId,
+            order_id: order.razorpayOrderId,
+            amount: order.amountPaise,
+            currency: order.currency,
+            name: 'OTG Event',
+            description: order.ticketType + ' ticket',
+            handler: async function(response){
+                log('Paid at Razorpay. Verifying with backend...');
+                // 3. Send the signed result to YOUR /verify
+                try {
+                    const v = await fetch('/api/v1/payments/verify', {
+                        method:'POST',
+                        headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+jwt },
+                        body: JSON.stringify({
+                            razorpayOrderId: response.razorpay_order_id,
+                            razorpayPaymentId: response.razorpay_payment_id,
+                            razorpaySignature: response.razorpay_signature
+                        })
+                    });
+                    log('Verify response ('+v.status+'):'); log(await v.json());
+                } catch(e){ log('Verify error: '+e); }
+            },
+            modal:{ ondismiss: function(){ log('Checkout closed without paying.'); } }
+        });
+        rzp.on('payment.failed', function(r){ log('Payment failed:'); log(r.error); });
+        rzp.open();
+    }
+</script>
+</body>
+</html>

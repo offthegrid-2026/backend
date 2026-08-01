@@ -47,6 +47,9 @@ public class PaymentServiceImpl implements PaymentService {
     @Value("${spring.app.payment.reservation-hold-minutes}")
     private long holdMinutes;
 
+    @Value("${spring.app.razorpay.webhook-secret}")
+    private String razorpayWebhookSecret;
+
 
     @Override
     @Transactional
@@ -134,6 +137,48 @@ public class PaymentServiceImpl implements PaymentService {
                 .ticketCode(ticket.getTicketCode())
                 .message("Payment Successful. Your ticket is confirmed.")
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public void handleWebhook(String payload, String signature) {
+
+
+        // 1. Verify the signature over the RAW body
+        if (signature == null) {
+            throw new PaymentVerificationException("Missing webhook signature.");
+        }
+        boolean valid;
+        try {
+            valid = Utils.verifyWebhookSignature(payload, signature, razorpayWebhookSecret);
+        }catch (RazorpayException e){
+            valid = false;
+        }
+        if(!valid){
+            throw new PaymentVerificationException("Invalid webhook signature.");
+        }
+
+        // 2. We only act on a captured payment.
+        JSONObject event = new JSONObject(payload);
+        if(!"payment.captured".equals(event.optString("event"))){
+            return; // ack and ignore everything else
+        }
+
+        JSONObject entity = event
+                .getJSONObject("payload")
+                .getJSONObject("payment")
+                .getJSONObject("entity");
+
+        String orderId = entity.optString("OrderId", null);
+        String paymentId = entity.optString("id", null);
+
+        if(orderId == null || paymentId == null){
+            return;
+        }
+
+        try{
+            confirmPaidOrder(orderId, paymentId, null);
+        }catch (ResourceNotFoundException e){}
     }
 
     private Ticket confirmPaidOrder(String orderId, String paymentId, Long expectedUserId) {
