@@ -2,6 +2,7 @@ package com.event.otg_backend.repository;
 
 import com.event.otg_backend.models.Payment;
 import com.event.otg_backend.models.PaymentStatus;
+import com.event.otg_backend.models.User;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -22,5 +23,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Payment p where p.razorpayOrderId = :orderId")
     Optional<Payment> findByRazorpayOrderIdForUpdate(@Param("orderId") String orderId);
+
+    Optional<Payment> findFirstByUserAndStatusAndCreatedAtAfterOrderByCreatedAtDesc(User user, PaymentStatus status, Instant threshold);
 
 }
