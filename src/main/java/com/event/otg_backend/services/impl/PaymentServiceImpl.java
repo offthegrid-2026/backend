@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -63,17 +64,28 @@ public class PaymentServiceImpl implements PaymentService {
             throw new AlreadyPaidException("You have already purchased a ticket.");
         }
 
-        // Lock this ticket type's row -> serializes seat counting + hold creation (no oversell)
-        TicketType type = ticketTypeRepository.findByCodeForUpdate(ticketTypeCode).orElseThrow(() -> new IllegalArgumentException("Invalid ticket type."));
-
-        // Gate 3: sale window (server-side)
         Instant now = Instant.now();
+        Instant holdThreshold = now.minus(Duration.ofMinutes(holdMinutes));
+
+        // Gate 3: ONE active hold per user. If a pending order already exists, return it
+        // instead of creating a second one -> prevents double-charge and seat-hold spam.
+
+        Optional<Payment> existingHold = paymentRepository.findFirstByUserAndStatusAndCreatedAtAfterOrderByCreatedAtDesc(user, PaymentStatus.CREATED, holdThreshold);
+
+        if (existingHold.isPresent()){
+            return toResponse(existingHold.get());
+        }
+
+        // Lock this ticket type's row -> serializes seat counting + hold creation (no oversell)
+        TicketType type = ticketTypeRepository.findByCodeForUpdate(ticketTypeCode).orElseThrow(()-> new IllegalArgumentException("Invalid ticket type."));
+
+
+        // Gate 4: sale window (server-side)
         if (now.isBefore(type.getSaleStartAt()) || now.isAfter(type.getSaleEndAt())){
             throw new TicketSaleClosedException("This ticket is not on sale right now.");
         }
 
-        // Gate 4: seats available? committed = paid + active (non-expired) holds
-        Instant holdThreshold = now.minus(Duration.ofMinutes(holdMinutes));
+        // Gate 5: seats available? committed = paid + active (non-expired) holds
         long paid = paymentRepository.countByTicketTypeCodeAndStatus(ticketTypeCode, PaymentStatus.PAID);
         long activeHolds = paymentRepository.countByTicketTypeCodeAndStatusAndCreatedAtAfter(ticketTypeCode, PaymentStatus.CREATED, holdThreshold);
 
@@ -93,12 +105,17 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setStatus(PaymentStatus.CREATED);
         paymentRepository.save(payment);
 
+        return toResponse(payment);
+    }
+
+    private CreateOrderResponseDto toResponse(Payment payment) {
+
         return CreateOrderResponseDto.builder()
-                .razorpayOrderId(orderId)
-                .amountPaise(type.getPricePaise())
-                .currency(currency)
+                .razorpayOrderId(payment.getRazorpayOrderId())
+                .amountPaise(payment.getAmountPaise())
+                .currency(payment.getCurrency())
                 .razorpayKeyId(razorpayKeyId)
-                .ticketType(ticketTypeCode)
+                .ticketType(payment.getTicketTypeCode())
                 .build();
     }
 
