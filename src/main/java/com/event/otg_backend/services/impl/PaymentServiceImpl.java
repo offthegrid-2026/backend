@@ -16,6 +16,7 @@ import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
 import com.razorpay.Utils;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PaymentServiceImpl implements PaymentService {
 
     private final UserRepository userRepository;
@@ -76,6 +78,7 @@ public class PaymentServiceImpl implements PaymentService {
         Optional<Payment> existingHold = paymentRepository.findFirstByUserAndStatusAndCreatedAtAfterOrderByCreatedAtDesc(user, PaymentStatus.CREATED, holdThreshold);
 
         if (existingHold.isPresent()){
+            log.debug("Reusing active hold for userId={}, orderId={}", userId, existingHold.get().getRazorpayOrderId());
             return toResponse(existingHold.get());
         }
 
@@ -108,6 +111,9 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setStatus(PaymentStatus.CREATED);
         paymentRepository.save(payment);
 
+        log.info("Order created: orderId={}, userId={}, ticketType={}, amountPaise={}",
+                orderId, userId, ticketTypeCode, payment.getAmountPaise());
+
         return toResponse(payment);
     }
 
@@ -127,6 +133,7 @@ public class PaymentServiceImpl implements PaymentService {
     public VerifyPaymentResponseDto verifyPayment(Long userId, PaymentVerificationDto dto) {
 
         if(!isSignatureValid(dto)){
+            log.warn("Payment signature verification failed: orderId={}, userId={}", dto.getRazorpayOrderId(), userId);
             throw new PaymentVerificationException("Payment Verification Failed.");
         }
 
@@ -143,24 +150,28 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public void handleWebhook(String payload, String signature) {
 
-
         // 1. Verify the signature over the RAW body
         if (signature == null) {
+            log.warn("Webhook rejected: missing X-Razorpay-Signature header");
             throw new PaymentVerificationException("Missing webhook signature.");
         }
         boolean valid;
         try {
             valid = Utils.verifyWebhookSignature(payload, signature, razorpayWebhookSecret);
         }catch (RazorpayException e){
+            log.error("Webhook signature verification threw an error: {}", e.getMessage(), e);
             valid = false;
         }
         if(!valid){
+            log.warn("Webhook rejected: invalid signature");
             throw new PaymentVerificationException("Invalid webhook signature.");
         }
 
         // 2. We only act on a captured payment.
         JSONObject event = new JSONObject(payload);
-        if(!"payment.captured".equals(event.optString("event"))){
+        String eventType = event.optString("event");
+        log.info("Webhook received: event={}", eventType);
+        if(!"payment.captured".equals(eventType)){
             return; // ack and ignore everything else
         }
 
@@ -173,12 +184,15 @@ public class PaymentServiceImpl implements PaymentService {
         String paymentId = entity.optString("id", null);
 
         if(orderId == null || paymentId == null){
+            log.warn("Webhook payment.captured missing order_id or payment_id — ignored");
             return;
         }
 
         try{
             confirmPaidOrder(orderId, paymentId, null);
-        }catch (ResourceNotFoundException e){}
+        }catch (ResourceNotFoundException e){
+            log.warn("Webhook for unknown order {} — no matching payment record, ignored", orderId);
+        }
     }
 
     private Ticket confirmPaidOrder(String orderId, String paymentId, Long expectedUserId) {
@@ -186,10 +200,13 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.findByRazorpayOrderIdForUpdate(orderId).orElseThrow(() -> new ResourceNotFoundException("Order not found."));
 
         if(expectedUserId != null && !payment.getUser().getId().equals(expectedUserId)){
+            log.warn("Ownership mismatch: orderId={} belongs to userId={}, but userId={} tried to confirm it",
+                    orderId, payment.getUser().getId(), expectedUserId);
             throw new PaymentVerificationException("This order doesn't belong to you.");
         }
 
         if (payment.getStatus() == PaymentStatus.PAID){
+            log.debug("Order {} already PAID — returning existing ticket (idempotent)", orderId);
             return ticketService.generateTicketForUser(payment.getUser(), payment.getTicketTypeCode(), payment.getAmountPaise());
         }
 
@@ -197,8 +214,12 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setStatus(PaymentStatus.PAID);
         paymentRepository.save(payment);
 
-        return ticketService.generateTicketForUser(payment.getUser(), payment.getTicketTypeCode(), payment.getAmountPaise());
+        Ticket ticket = ticketService.generateTicketForUser(payment.getUser(), payment.getTicketTypeCode(), payment.getAmountPaise());
 
+        log.info("Payment confirmed: orderId={}, paymentId={}, userId={}, ticketCode={}",
+                orderId, paymentId, payment.getUser().getId(), ticket.getTicketCode());
+
+        return ticket;
     }
 
     private boolean isSignatureValid(PaymentVerificationDto dto) {
@@ -209,6 +230,7 @@ public class PaymentServiceImpl implements PaymentService {
             options.put("razorpay_signature", dto.getRazorpaySignature());
             return Utils.verifyPaymentSignature(options, razorpayKeySecret);
         }catch (RazorpayException e){
+            log.error("Error verifying payment signature for orderId={}: {}", dto.getRazorpayOrderId(), e.getMessage(), e);
             return false;
         }
     }
@@ -227,6 +249,8 @@ public class PaymentServiceImpl implements PaymentService {
 
             return razorpayClient.orders.create(request);
         }catch (RazorpayException e){
+            log.error("Razorpay order creation failed for userId={}, ticketType={}: {}",
+                    user.getId(), type.getCode(), e.getMessage(), e);
             throw new PaymentException("Could not initiate payment. Please try again.");
         }
     }
