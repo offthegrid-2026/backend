@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TicketServiceImpl implements TicketService {
 
-    private static final int TICKET_CODE_LENGTH = 12;
+    private static final int TICKET_CODE_LENGTH = 32;
 
     private final TicketRepository ticketRepository;
     private final UserRepository userRepository;

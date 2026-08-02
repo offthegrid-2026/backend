@@ -33,7 +33,7 @@ public class Ticket {
     @Column(updatable = false)
     private Instant timestamp;
 
-    @Column(unique = true, nullable = false, length = 20)
+    @Column(unique = true, nullable = false, length = 40)
     private String ticketCode;
 
     @Column(length = 30)
