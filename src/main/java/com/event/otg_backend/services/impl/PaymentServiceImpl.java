@@ -169,7 +169,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .getJSONObject("payment")
                 .getJSONObject("entity");
 
-        String orderId = entity.optString("OrderId", null);
+        String orderId = entity.optString("order_id", null);
         String paymentId = entity.optString("id", null);
 
         if(orderId == null || paymentId == null){
