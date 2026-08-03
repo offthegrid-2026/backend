@@ -1,6 +1,10 @@
 package com.event.otg_backend.services.impl;
 
+import com.event.otg_backend.exceptions.ResourceNotFoundException;
 import com.event.otg_backend.helpers.HashcodeGenerator;
+import com.event.otg_backend.helpers.QrCodeGenerator;
+import com.event.otg_backend.helpers.TicketPdfGenerator;
+import com.event.otg_backend.helpers.UserNameFormatter;
 import com.event.otg_backend.models.Ticket;
 import com.event.otg_backend.models.User;
 import com.event.otg_backend.repository.TicketRepository;
@@ -34,6 +38,24 @@ public class TicketServiceImpl implements TicketService {
 
             return ticketRepository.save(ticket);
         });
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] getTicketPdfForUser(Long userId) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Ticket ticket = ticketRepository.findByUser(user)
+                .orElseThrow(()-> new ResourceNotFoundException("No ticket found. Complete your payment first."));
+
+        try {
+            byte[] qr = QrCodeGenerator.generateQrImage(ticket.getTicketCode(), 300, 300);
+            return TicketPdfGenerator.generate(user.getId(), UserNameFormatter.fullName(user), qr);
+        }catch (Exception e){
+            throw new RuntimeException("Could not generate ticket pdf", e);
+        }
     }
 
     private String generateUniqueTicketCode() {

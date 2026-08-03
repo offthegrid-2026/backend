@@ -6,4 +6,6 @@ import com.event.otg_backend.models.User;
 public interface TicketService {
 
     Ticket generateTicketForUser(User user, String ticketTypeCode, Long amountPaise);
+
+    byte[] getTicketPdfForUser(Long userId);
 }
