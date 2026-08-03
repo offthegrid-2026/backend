@@ -3,10 +3,12 @@ package com.event.otg_backend.services.impl;
 import com.event.otg_backend.dtos.CreateOrderResponseDto;
 import com.event.otg_backend.dtos.PaymentVerificationDto;
 import com.event.otg_backend.dtos.VerifyPaymentResponseDto;
+import com.event.otg_backend.events.TicketConfirmedEvent;
 import com.event.otg_backend.exceptions.*;
 import com.event.otg_backend.helpers.ProfileCompletionChecker;
 import com.event.otg_backend.models.*;
 import com.event.otg_backend.repository.PaymentRepository;
+import com.event.otg_backend.repository.TicketRepository;
 import com.event.otg_backend.repository.TicketTypeRepository;
 import com.event.otg_backend.repository.UserRepository;
 import com.event.otg_backend.services.PaymentService;
@@ -19,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,8 +37,10 @@ public class PaymentServiceImpl implements PaymentService {
     private final UserRepository userRepository;
     private final TicketTypeRepository ticketTypeRepository;
     private final PaymentRepository paymentRepository;
+    private final TicketRepository ticketRepository;
     private final TicketService ticketService;
     private final RazorpayClient razorpayClient;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${spring.app.razorpay.key-id}")
     private String razorpayKeyId;
@@ -210,16 +215,51 @@ public class PaymentServiceImpl implements PaymentService {
             return ticketService.generateTicketForUser(payment.getUser(), payment.getTicketTypeCode(), payment.getAmountPaise());
         }
 
+        User user = payment.getUser();
+
+        // DUPLICATE-PAYMENT GUARD: this order is still CREATED, but the user ALREADY has a ticket
+        // from a different order (e.g. an expired hold that got paid late). Never charge twice for one
+        // ticket -> refund this payment instead of confirming it again.
+        Optional<Ticket> existingTicket = ticketRepository.findByUser(user);
+        if (existingTicket.isPresent()) {
+            log.warn("Duplicate payment: userId={} already has a ticket; second order {} was paid (paymentId={}). Refunding.",
+                    user.getId(), orderId, paymentId);
+            payment.setRazorpayPaymentId(paymentId);
+            boolean refunded = refundPayment(paymentId);
+            payment.setStatus(refunded ? PaymentStatus.REFUNDED : PaymentStatus.REFUND_FAILED);
+            paymentRepository.save(payment);
+            return existingTicket.get();   // user already has their ticket; the extra charge is refunded
+        }
+
         payment.setRazorpayPaymentId(paymentId);
         payment.setStatus(PaymentStatus.PAID);
         paymentRepository.save(payment);
 
-        Ticket ticket = ticketService.generateTicketForUser(payment.getUser(), payment.getTicketTypeCode(), payment.getAmountPaise());
+        Ticket ticket = ticketService.generateTicketForUser(user, payment.getTicketTypeCode(), payment.getAmountPaise());
 
         log.info("Payment confirmed: orderId={}, paymentId={}, userId={}, ticketCode={}",
-                orderId, paymentId, payment.getUser().getId(), ticket.getTicketCode());
+                orderId, paymentId, user.getId(), ticket.getTicketCode());
+
+        eventPublisher.publishEvent(new TicketConfirmedEvent(ticket.getId()));
 
         return ticket;
+    }
+
+    // Full refund of a duplicate payment via Razorpay. Returns true on success. On failure it logs loudly
+    // and the caller marks the payment REFUND_FAILED so it can be found and refunded manually. Never
+    // rethrows — the user still holds a valid ticket, so a refund hiccup must not break confirmation.
+    private boolean refundPayment(String paymentId) {
+        try {
+            JSONObject request = new JSONObject();
+            request.put("speed", "normal");
+            razorpayClient.payments.refund(paymentId, request);
+            log.info("Refund initiated for duplicate paymentId={}", paymentId);
+            return true;
+        } catch (RazorpayException e) {
+            log.error("MANUAL REFUND REQUIRED — auto-refund failed for duplicate paymentId={}: {}",
+                    paymentId, e.getMessage(), e);
+            return false;
+        }
     }
 
     private boolean isSignatureValid(PaymentVerificationDto dto) {

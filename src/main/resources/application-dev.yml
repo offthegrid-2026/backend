@@ -55,6 +55,9 @@ spring:
     payment:
       currency: INR
       reservation-hold-minutes: 10
+    ticket:
+      resend-sweep-ms: 300000        # run the resend sweep every 5 minutes
+      resend-after-minutes: 2        # only retry tickets stuck unsent longer than this
 
 logging:
   level:

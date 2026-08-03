@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.Instant;
@@ -29,13 +30,17 @@ public class Ticket {
     @Column(nullable = false)
     private Double price;
 
-    @CreationTimestamp
-    @Column(updatable = false)
-    private Instant timestamp;
-
     @Column(unique = true, nullable = false, length = 40)
     private String ticketCode;
 
     @Column(length = 30)
     private String ticketTypeCode;
+
+    @Column(nullable = false)
+    @ColumnDefault("false")
+    private boolean emailSent = false;
+
+    @CreationTimestamp
+    @Column(updatable = false)
+    private Instant timestamp;
 }
