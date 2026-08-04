@@ -10,7 +10,7 @@ public final class ProfileCompletionChecker {
         return hasText(user.getFirstName())
                 && hasText(user.getLastName())
                 && hasText(user.getPhoneNumber())
-                && hasText(user.getCity())
+                && hasText(user.getCityState())
                 && hasText(user.getCollegeOrOrg());
     }
 

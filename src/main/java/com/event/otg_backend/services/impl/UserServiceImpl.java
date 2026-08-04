@@ -62,8 +62,8 @@ public class UserServiceImpl implements UserService {
             user.setLastName(dto.getLastName());
         if(dto.getPhoneNumber() != null)
             user.setPhoneNumber(dto.getPhoneNumber());
-        if(dto.getCity() != null)
-            user.setCity(dto.getCity());
+        if(dto.getCityState() != null)
+            user.setCityState(dto.getCityState());
         if(dto.getCollegeOrOrg() != null)
             user.setCollegeOrOrg(dto.getCollegeOrOrg());
 
