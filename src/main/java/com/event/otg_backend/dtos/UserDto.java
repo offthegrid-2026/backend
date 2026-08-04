@@ -16,7 +16,7 @@ public class UserDto {
     private String firstName;
     private String lastName;
     private String phoneNumber;
-    private String city;
+    private String cityState;
     private String collegeOrOrg;
     private Boolean paymentStatus = false;
     private Instant createdAt = Instant.now();

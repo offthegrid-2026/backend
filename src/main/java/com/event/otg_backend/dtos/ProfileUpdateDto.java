@@ -21,7 +21,7 @@ public class ProfileUpdateDto {
     private String phoneNumber;
 
     @Size(max = 60)
-    private String city;
+    private String cityState;
 
     @Size(max = 100)
     private String collegeOrOrg;

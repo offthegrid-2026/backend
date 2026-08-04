@@ -37,7 +37,7 @@ public class User {
 
     private String phoneNumber;
 
-    private String city;
+    private String cityState;
 
     private String collegeOrOrg;
 
