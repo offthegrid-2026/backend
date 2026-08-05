@@ -44,12 +44,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         try {
             Claims claims = jwtService.validateAndGetClaims(token);
 
-            Long userId = jwtService.extractUserId(claims);
-
-            var authentication = new UsernamePasswordAuthenticationToken(userId,null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
-
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (jwtService.isAdmin(claims)){
+                String adminEmail = jwtService.extractEmail(claims);
+                var authentication = new UsernamePasswordAuthenticationToken(
+                        adminEmail, null, List.of(new SimpleGrantedAuthority("ROEL_ADMIN")));
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else{
+                Long userId = jwtService.extractUserId(claims);
+                var authentication = new UsernamePasswordAuthenticationToken(
+                        userId, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
 
         }catch (InvalidTokenException ex){
             writeUnauthorized(response, ex.getMessage());

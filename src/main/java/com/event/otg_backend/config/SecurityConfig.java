@@ -31,6 +31,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/payments/webhook").permitAll()
                         .requestMatchers("/pay-test.html", "/log-viewer.html", "/ticket-preview", "/ticket-email-test").permitAll()// TEMP: dev test page, remove before prod
                         .requestMatchers("/actuator/**").permitAll()// TEMP: dev test page, remove before prod
+                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
