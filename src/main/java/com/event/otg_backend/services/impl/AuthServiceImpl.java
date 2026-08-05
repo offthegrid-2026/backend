@@ -10,14 +10,19 @@ import com.event.otg_backend.services.AuthService;
 import com.event.otg_backend.services.EmailService;
 import com.event.otg_backend.services.OtpService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 
 
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
+
+    @Value("${spring.app.admin.emails}")
+    private String[] adminEmails;
 
     private final OtpService otpService;
     private final EmailService emailService;
@@ -47,6 +52,15 @@ public class AuthServiceImpl implements AuthService {
 
         otpService.verifyOtp(normalizedEmail, otp);
 
+        if (isAdminEmail(normalizedEmail)){
+            String token = jwtService.generateAdminToken(normalizedEmail);
+            return AuthResponseDto.builder()
+                    .token(token)
+                    .email(normalizedEmail)
+                    .admin(true)
+                    .build();
+        }
+
         User user = userRepository.findByEmail(normalizedEmail)
                 .orElseGet(() -> createBareUser(normalizedEmail));
 
@@ -58,6 +72,10 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .profileCompleted(ProfileCompletionChecker.isComplete(user))
                 .build();
+    }
+
+    private boolean isAdminEmail(String email){
+        return Arrays.asList(adminEmails).contains(email);
     }
 
     @Override
