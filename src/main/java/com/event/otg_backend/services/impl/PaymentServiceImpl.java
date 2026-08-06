@@ -1,11 +1,17 @@
 package com.event.otg_backend.services.impl;
 
-import com.event.otg_backend.dtos.CreateOrderResponseDto;
-import com.event.otg_backend.dtos.PaymentVerificationDto;
-import com.event.otg_backend.dtos.VerifyPaymentResponseDto;
+import com.event.otg_backend.dtos.payment.CreateOrderResponseDto;
+import com.event.otg_backend.dtos.payment.PaymentVerificationDto;
+import com.event.otg_backend.dtos.payment.VerifyPaymentResponseDto;
 import com.event.otg_backend.events.TicketConfirmedEvent;
-import com.event.otg_backend.exceptions.*;
-import com.event.otg_backend.helpers.ProfileCompletionChecker;
+import com.event.otg_backend.exceptions.ResourceNotFoundException;
+import com.event.otg_backend.exceptions.payment.AlreadyPaidException;
+import com.event.otg_backend.exceptions.payment.PaymentException;
+import com.event.otg_backend.exceptions.payment.PaymentVerificationException;
+import com.event.otg_backend.exceptions.payment.TicketSaleClosedException;
+import com.event.otg_backend.exceptions.payment.TicketSoldOutException;
+import com.event.otg_backend.exceptions.user.ProfileIncompleteException;
+import com.event.otg_backend.helpers.user.ProfileCompletionChecker;
 import com.event.otg_backend.models.*;
 import com.event.otg_backend.repository.PaymentRepository;
 import com.event.otg_backend.repository.TicketRepository;

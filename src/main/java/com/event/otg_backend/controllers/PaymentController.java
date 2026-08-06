@@ -1,10 +1,10 @@
 package com.event.otg_backend.controllers;
 
-import com.event.otg_backend.dtos.CreateOrderRequestDto;
-import com.event.otg_backend.dtos.CreateOrderResponseDto;
-import com.event.otg_backend.dtos.PaymentVerificationDto;
-import com.event.otg_backend.dtos.VerifyPaymentResponseDto;
-import com.event.otg_backend.helpers.CurrentUserProvider;
+import com.event.otg_backend.dtos.payment.CreateOrderRequestDto;
+import com.event.otg_backend.dtos.payment.CreateOrderResponseDto;
+import com.event.otg_backend.dtos.payment.PaymentVerificationDto;
+import com.event.otg_backend.dtos.payment.VerifyPaymentResponseDto;
+import com.event.otg_backend.helpers.security.CurrentUserProvider;
 import com.event.otg_backend.services.PaymentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package com.event.otg_backend.services;
 
-import com.event.otg_backend.dtos.CreateOrderResponseDto;
-import com.event.otg_backend.dtos.PaymentVerificationDto;
-import com.event.otg_backend.dtos.VerifyPaymentResponseDto;
+import com.event.otg_backend.dtos.payment.CreateOrderResponseDto;
+import com.event.otg_backend.dtos.payment.PaymentVerificationDto;
+import com.event.otg_backend.dtos.payment.VerifyPaymentResponseDto;
 
 public interface PaymentService {
 

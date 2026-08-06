@@ -1,10 +1,20 @@
 package com.event.otg_backend.exceptions;
 
 import com.event.otg_backend.dtos.ErrorResponse;
+import com.event.otg_backend.exceptions.auth.InvalidTokenException;
 import com.event.otg_backend.exceptions.otp.OtpExpiredException;
 import com.event.otg_backend.exceptions.otp.OtpInvalidException;
 import com.event.otg_backend.exceptions.otp.OtpMaxAttemptsExceededException;
 import com.event.otg_backend.exceptions.otp.OtpRateLimitExceededException;
+import com.event.otg_backend.exceptions.payment.AlreadyPaidException;
+import com.event.otg_backend.exceptions.payment.PaymentException;
+import com.event.otg_backend.exceptions.payment.PaymentVerificationException;
+import com.event.otg_backend.exceptions.payment.TicketSaleClosedException;
+import com.event.otg_backend.exceptions.payment.TicketSoldOutException;
+import com.event.otg_backend.exceptions.user.ProfileIncompleteException;
+import com.event.otg_backend.exceptions.user.ProfileLockedException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,13 +25,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
-
-//    @ExceptionHandler(IllegalArgumentException.class)
-//    public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException ex){
-//        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-//                .body(Map.of("message", ex.getMessage()));
-//    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationException(MethodArgumentNotValidException ex) {
@@ -48,6 +53,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException exception){
         ErrorResponse internalServerError = new ErrorResponse(exception.getMessage(), HttpStatus.BAD_REQUEST);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(internalServerError);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException exception){
+        log.error("Data integrity violation: {}", exception.getMessage(), exception);
+        ErrorResponse error = new ErrorResponse(
+                "This record is linked to other data and cannot be changed.", HttpStatus.CONFLICT);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
 //    OTP Handlers START

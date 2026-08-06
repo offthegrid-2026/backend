@@ -1,10 +1,10 @@
 package com.event.otg_backend.services.impl;
 
 import com.event.otg_backend.exceptions.ResourceNotFoundException;
-import com.event.otg_backend.helpers.HashcodeGenerator;
-import com.event.otg_backend.helpers.QrCodeGenerator;
-import com.event.otg_backend.helpers.TicketPdfGenerator;
-import com.event.otg_backend.helpers.UserNameFormatter;
+import com.event.otg_backend.helpers.ticket.HashcodeGenerator;
+import com.event.otg_backend.helpers.ticket.QrCodeGenerator;
+import com.event.otg_backend.helpers.ticket.TicketPdfGenerator;
+import com.event.otg_backend.helpers.user.UserNameFormatter;
 import com.event.otg_backend.models.Ticket;
 import com.event.otg_backend.models.User;
 import com.event.otg_backend.repository.TicketRepository;
