@@ -47,7 +47,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             if (jwtService.isAdmin(claims)){
                 String adminEmail = jwtService.extractEmail(claims);
                 var authentication = new UsernamePasswordAuthenticationToken(
-                        adminEmail, null, List.of(new SimpleGrantedAuthority("ROEL_ADMIN")));
+                        adminEmail, null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else{
