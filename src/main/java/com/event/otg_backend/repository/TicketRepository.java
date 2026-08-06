@@ -24,4 +24,9 @@ public interface TicketRepository  extends JpaRepository<Ticket, Integer> {
 
     // Confirmed tickets whose email never went out and that are older than the given cutoff.
     List<Ticket> findByEmailSentFalseAndTimestampBefore(Instant threshold);
+
+    long countByTicketTypeCode(String ticketTypeCode);
+
+    @Query("select coalesce(sum(t.price), 0) from Ticket t")
+    Double sumAllPrices();
 }
