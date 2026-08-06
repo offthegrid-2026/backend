@@ -1,10 +1,10 @@
 package com.event.otg_backend.services.impl;
 
-import com.event.otg_backend.dtos.ProfileUpdateDto;
-import com.event.otg_backend.dtos.UserDto;
-import com.event.otg_backend.exceptions.ProfileLockedException;
+import com.event.otg_backend.dtos.user.ProfileUpdateDto;
+import com.event.otg_backend.dtos.user.UserDto;
+import com.event.otg_backend.exceptions.user.ProfileLockedException;
 import com.event.otg_backend.exceptions.ResourceNotFoundException;
-import com.event.otg_backend.helpers.ProfileCompletionChecker;
+import com.event.otg_backend.helpers.user.ProfileCompletionChecker;
 import com.event.otg_backend.models.User;
 import com.event.otg_backend.repository.UserRepository;
 import com.event.otg_backend.services.UserService;

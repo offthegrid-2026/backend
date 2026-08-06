@@ -1,8 +1,8 @@
 package com.event.otg_backend.controllers;
 
-import com.event.otg_backend.dtos.ProfileUpdateDto;
-import com.event.otg_backend.dtos.UserDto;
-import com.event.otg_backend.helpers.CurrentUserProvider;
+import com.event.otg_backend.dtos.user.ProfileUpdateDto;
+import com.event.otg_backend.dtos.user.UserDto;
+import com.event.otg_backend.helpers.security.CurrentUserProvider;
 import com.event.otg_backend.services.UserService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;

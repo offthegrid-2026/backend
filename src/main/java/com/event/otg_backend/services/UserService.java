@@ -1,7 +1,7 @@
 package com.event.otg_backend.services;
 
-import com.event.otg_backend.dtos.ProfileUpdateDto;
-import com.event.otg_backend.dtos.UserDto;
+import com.event.otg_backend.dtos.user.ProfileUpdateDto;
+import com.event.otg_backend.dtos.user.UserDto;
 import com.event.otg_backend.models.User;
 
 import java.util.List;

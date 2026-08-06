@@ -1,8 +1,8 @@
 package com.event.otg_backend.config;
 
 import com.event.otg_backend.dtos.ErrorResponse;
-import com.event.otg_backend.exceptions.InvalidTokenException;
-import com.event.otg_backend.helpers.JwtService;
+import com.event.otg_backend.exceptions.auth.InvalidTokenException;
+import com.event.otg_backend.helpers.security.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

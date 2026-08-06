@@ -1,7 +1,7 @@
 package com.event.otg_backend.controllers;
 
-import com.event.otg_backend.helpers.QrCodeGenerator;
-import com.event.otg_backend.helpers.TicketPdfGenerator;
+import com.event.otg_backend.helpers.ticket.QrCodeGenerator;
+import com.event.otg_backend.helpers.ticket.TicketPdfGenerator;
 import com.event.otg_backend.services.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;

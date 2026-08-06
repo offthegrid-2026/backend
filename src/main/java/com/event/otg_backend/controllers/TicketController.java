@@ -1,6 +1,6 @@
 package com.event.otg_backend.controllers;
 
-import com.event.otg_backend.helpers.CurrentUserProvider;
+import com.event.otg_backend.helpers.security.CurrentUserProvider;
 import com.event.otg_backend.services.TicketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;

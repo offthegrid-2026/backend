@@ -1,6 +1,6 @@
 package com.event.otg_backend.controllers;
 
-import com.event.otg_backend.dtos.AdminDashboardResponseDto;
+import com.event.otg_backend.dtos.admin.AdminDashboardResponseDto;
 import com.event.otg_backend.services.AdminDashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

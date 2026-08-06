@@ -1,9 +1,9 @@
 package com.event.otg_backend.controllers;
 
-import com.event.otg_backend.dtos.AuthResponseDto;
-import com.event.otg_backend.dtos.OtpRequestDto;
-import com.event.otg_backend.dtos.OtpVerifyDto;
-import com.event.otg_backend.exceptions.InvalidTokenException;
+import com.event.otg_backend.dtos.auth.AuthResponseDto;
+import com.event.otg_backend.dtos.auth.OtpRequestDto;
+import com.event.otg_backend.dtos.auth.OtpVerifyDto;
+import com.event.otg_backend.exceptions.auth.InvalidTokenException;
 import com.event.otg_backend.services.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

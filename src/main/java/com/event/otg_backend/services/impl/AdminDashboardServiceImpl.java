@@ -1,7 +1,7 @@
 package com.event.otg_backend.services.impl;
 
-import com.event.otg_backend.dtos.AdminDashboardResponseDto;
-import com.event.otg_backend.dtos.TicketTypeSalesDto;
+import com.event.otg_backend.dtos.admin.AdminDashboardResponseDto;
+import com.event.otg_backend.dtos.admin.TicketTypeSalesDto;
 import com.event.otg_backend.models.TicketType;
 import com.event.otg_backend.repository.TicketRepository;
 import com.event.otg_backend.repository.TicketTypeRepository;

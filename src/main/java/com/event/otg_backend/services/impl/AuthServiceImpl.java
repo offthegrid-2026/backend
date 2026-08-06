@@ -1,9 +1,9 @@
 package com.event.otg_backend.services.impl;
 
-import com.event.otg_backend.dtos.AuthResponseDto;
+import com.event.otg_backend.dtos.auth.AuthResponseDto;
 import com.event.otg_backend.exceptions.EmailSendException;
-import com.event.otg_backend.helpers.JwtService;
-import com.event.otg_backend.helpers.ProfileCompletionChecker;
+import com.event.otg_backend.helpers.security.JwtService;
+import com.event.otg_backend.helpers.user.ProfileCompletionChecker;
 import com.event.otg_backend.models.User;
 import com.event.otg_backend.repository.UserRepository;
 import com.event.otg_backend.services.AuthService;
