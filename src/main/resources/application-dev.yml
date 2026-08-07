@@ -44,6 +44,8 @@ spring:
       allowed-origins: http://localhost:5173
     admin:
       emails: debarghyadatta2004@gmail.com
+    scanner:
+      emails: //the email of the person scanning
     jwt:
       secret: ${JWT_SECRET_KEY}
       expiration-ms: 604800000

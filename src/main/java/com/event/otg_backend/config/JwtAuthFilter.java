@@ -43,20 +43,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         try {
             Claims claims = jwtService.validateAndGetClaims(token);
+            String role = jwtService.extractRole(claims);
 
-            if (jwtService.isAdmin(claims)){
-                String adminEmail = jwtService.extractEmail(claims);
-                var authentication = new UsernamePasswordAuthenticationToken(
-                        adminEmail, null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+            UsernamePasswordAuthenticationToken authentication;
+
+            if ("ADMIN".equals(role) || "SCANNER".equals(role)){
+                String email = jwtService.extractEmail(claims);
+                authentication = new UsernamePasswordAuthenticationToken(email, null, List.of(new SimpleGrantedAuthority("ROLE_"+role)));
             } else{
                 Long userId = jwtService.extractUserId(claims);
-                var authentication = new UsernamePasswordAuthenticationToken(
-                        userId, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                authentication = new UsernamePasswordAuthenticationToken(userId, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
             }
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
         }catch (InvalidTokenException ex){
             writeUnauthorized(response, ex.getMessage());
