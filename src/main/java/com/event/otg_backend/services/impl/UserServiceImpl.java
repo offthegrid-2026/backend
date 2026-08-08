@@ -70,15 +70,4 @@ public class UserServiceImpl implements UserService {
         User saved = userRepository.save(user);
         return modelMapper.map(saved, UserDto.class);
     }
-
-    @Override
-    @Transactional
-    public void markPaymentAsPaid(Long userId) {
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
-
-        user.setPaymentStatus(true);
-        userRepository.save(user);
-    }
 }
