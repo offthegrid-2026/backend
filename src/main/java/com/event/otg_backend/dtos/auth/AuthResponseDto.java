@@ -14,4 +14,5 @@ public class AuthResponseDto {
     private String email;
     private boolean profileCompleted;
     private boolean admin;
+    private boolean scanner;
 }

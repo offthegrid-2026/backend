@@ -49,6 +49,23 @@ public class JwtService {
                 .compact();
     }
 
+    public String generateScannerToken(String email){
+
+        String jti = UUID.randomUUID().toString();
+        Instant now = Instant.now();
+        Instant expiry = now.plusMillis(expirationMs);
+
+        return Jwts.builder()
+                .subject(email)
+                .claim("email", email)
+                .claim("role", "SCANNER")
+                .id(jti)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiry))
+                .signWith(signingKey)
+                .compact();
+    }
+
     public String generateAdminToken(String email){
         String jti = UUID.randomUUID().toString();
         Instant now = Instant.now();
@@ -65,8 +82,8 @@ public class JwtService {
                 .compact();
     }
 
-    public boolean isAdmin(Claims claims){
-        return "ADMIN".equals(claims.get("role", String.class));
+    public String extractRole(Claims claims){
+        return claims.get("role", String.class);
     }
 
     private Claims parseClaims(String token){

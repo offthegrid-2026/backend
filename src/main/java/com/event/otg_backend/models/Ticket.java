@@ -40,6 +40,12 @@ public class Ticket {
     @ColumnDefault("false")
     private boolean emailSent = false;
 
+    // Gate check-in. null scannedAt = not yet scanned; one field so the two can never disagree.
+    private Instant scannedAt;
+
+    @Column(length = 120)
+    private String scannedBy;          // staff email that admitted them
+
     @CreationTimestamp
     @Column(updatable = false)
     private Instant timestamp;

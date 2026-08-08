@@ -4,15 +4,15 @@ import com.event.otg_backend.exceptions.auth.InvalidTokenException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-public class CurrentAdminProvider {
+public class CurrentStaffProvider {
 
-    private CurrentAdminProvider(){}
+    private CurrentStaffProvider(){}
 
-    public static String getCurrentAdminEmail(){
+    public static String getCurrentStaffEmail(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if(authentication == null || !(authentication.getPrincipal() instanceof String)){
-            throw new InvalidTokenException("No authenticated admin found");
+            throw new InvalidTokenException("No authenticated staff member found");
         }
         return (String) authentication.getPrincipal();
     }

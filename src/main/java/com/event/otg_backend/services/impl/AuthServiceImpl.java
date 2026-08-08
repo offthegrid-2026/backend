@@ -24,6 +24,9 @@ public class AuthServiceImpl implements AuthService {
     @Value("${spring.app.admin.emails}")
     private String[] adminEmails;
 
+    @Value("${spring.app.scanner.emails:}")
+    private String[] scannerEmails;
+
     private final OtpService otpService;
     private final EmailService emailService;
     private final UserRepository userRepository;
@@ -61,6 +64,15 @@ public class AuthServiceImpl implements AuthService {
                     .build();
         }
 
+        if (isScannerEmail(normalizedEmail)){
+            String token = jwtService.generateScannerToken(normalizedEmail);
+            return AuthResponseDto.builder()
+                    .token(token)
+                    .email(normalizedEmail)
+                    .scanner(true)
+                    .build();
+        }
+
         User user = userRepository.findByEmail(normalizedEmail)
                 .orElseGet(() -> createBareUser(normalizedEmail));
 
@@ -72,6 +84,13 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .profileCompleted(ProfileCompletionChecker.isComplete(user))
                 .build();
+    }
+
+    private boolean isScannerEmail(String email) {
+        return Arrays.stream(scannerEmails)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .anyMatch(s -> s.equalsIgnoreCase(email));
     }
 
     private boolean isAdminEmail(String email){
