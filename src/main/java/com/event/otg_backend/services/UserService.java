@@ -14,6 +14,4 @@ public interface UserService {
 
     UserDto updateProfile(Long userId, ProfileUpdateDto profileUpdateDto);
 
-    void markPaymentAsPaid(Long userId);
-
 }
