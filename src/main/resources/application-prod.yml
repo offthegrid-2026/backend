@@ -1,0 +1,82 @@
+# Production configuration. Every secret comes from an environment variable supplied by
+# docker compose (otg-deploy/.env on the server) - nothing secret belongs in this file.
+
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:otg}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      # No migration tool: Hibernate creates missing tables and columns on startup.
+      # `update` only ever ADDS - renaming or dropping a column needs a manual SQL step.
+      ddl-auto: update
+    show-sql: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+  app:
+    cors:
+      # The public site, e.g. https://passes.example.com (comma-separate if more than one).
+      allowed-origins: ${CORS_ALLOWED_ORIGINS}
+    scanner:
+      emails: ${SCANNER_MAIL:}
+    jwt:
+      secret: ${JWT_SECRET_KEY}
+      expiration-ms: 604800000
+    otp:
+      expiry-minutes: 5
+      max-requests-per-window: 3
+      request-window-minutes: 10
+      max-verify-attempts: 5
+    razorpay:
+      key-id: ${RAZORPAY_KEY_ID}
+      key-secret: ${RAZORPAY_KEY_SECRET}
+      webhook-secret: ${RAZORPAY_WEBHOOK_SECRET}
+    payment:
+      currency: INR
+      reservation-hold-minutes: 10
+    ticket:
+      resend-sweep-ms: 300000
+      resend-after-minutes: 2
+
+# Logs go to stdout only (read them with `docker compose logs backend`). No SQL logging:
+# bound parameters include users' emails and phone numbers.
+logging:
+  level:
+    root: INFO
+    com.event.otg_backend: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  health:
+    # Gmail being slow or down must not mark the whole app DOWN - that would make docker
+    # (and nginx) treat a working backend as dead.
+    mail:
+      enabled: false

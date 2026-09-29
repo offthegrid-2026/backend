@@ -1,0 +1,14 @@
+# Secrets must never be baked into an image. Docker does not read .gitignore.
+.env
+.env.*
+
+# Build output and local files
+target/
+logs/
+.idea/
+.vscode/
+.claude/
+*.iml
+.git/
+HELP.md
+CLAUDE.md
