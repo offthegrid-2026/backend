@@ -8,8 +8,8 @@ public class OtpGenerator {
 
     public static String generate(){
 
-//        int otp = RANDOM.nextInt(1_000_000);
-        int otp = 123456; // should not be used in production, uncomment the above line for production
+        int otp = RANDOM.nextInt(1_000_000);
+//        int otp = 123456; // should not be used in production, uncomment the above line for production
         return String.format("%06d", otp);
     }
 
