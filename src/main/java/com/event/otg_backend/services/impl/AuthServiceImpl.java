@@ -21,9 +21,6 @@ import java.util.Arrays;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    @Value("${spring.app.admin.emails}")
-    private String[] adminEmails;
-
     @Value("${spring.app.scanner.emails:}")
     private String[] scannerEmails;
 
@@ -55,15 +52,6 @@ public class AuthServiceImpl implements AuthService {
 
         otpService.verifyOtp(normalizedEmail, otp);
 
-        if (isAdminEmail(normalizedEmail)){
-            String token = jwtService.generateAdminToken(normalizedEmail);
-            return AuthResponseDto.builder()
-                    .token(token)
-                    .email(normalizedEmail)
-                    .admin(true)
-                    .build();
-        }
-
         if (isScannerEmail(normalizedEmail)){
             String token = jwtService.generateScannerToken(normalizedEmail);
             return AuthResponseDto.builder()
@@ -91,10 +79,6 @@ public class AuthServiceImpl implements AuthService {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .anyMatch(s -> s.equalsIgnoreCase(email));
-    }
-
-    private boolean isAdminEmail(String email){
-        return Arrays.asList(adminEmails).contains(email);
     }
 
     @Override

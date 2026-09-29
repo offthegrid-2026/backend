@@ -42,8 +42,6 @@ spring:
   app:
     cors:
       allowed-origins: http://localhost:5173
-    admin:
-      emails: debarghyadatta2004@gmail.com
     scanner:
       emails: ""    # comma-separated gate-staff emails, e.g. gate1@gmail.com,gate2@gmail.com
     jwt:
@@ -78,4 +76,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,logfile
+        include: health

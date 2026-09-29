@@ -3,7 +3,7 @@ package com.event.otg_backend.services.impl;
 import com.event.otg_backend.dtos.scan.ScanRequestDto;
 import com.event.otg_backend.dtos.scan.ScanResponseDto;
 import com.event.otg_backend.dtos.scan.ScanStatus;
-import com.event.otg_backend.helpers.security.CurrentStaffProvider;
+import com.event.otg_backend.helpers.security.CurrentScannerProvider;
 import com.event.otg_backend.helpers.user.UserNameFormatter;
 import com.event.otg_backend.models.Ticket;
 import com.event.otg_backend.models.User;
@@ -54,7 +54,7 @@ public class TicketScanServiceImpl implements TicketScanService {
         }
 
         ticket.setScannedAt(Instant.now());
-        ticket.setScannedBy(CurrentStaffProvider.getCurrentStaffEmail());
+        ticket.setScannedBy(CurrentScannerProvider.getCurrentScannerEmail());
         ticketRepository.save(ticket);
 
         log.info("Ticket checked in: ticketId={}, userId={}, by={}",

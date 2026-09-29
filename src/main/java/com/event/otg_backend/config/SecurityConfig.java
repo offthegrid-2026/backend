@@ -29,11 +29,9 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthEntryPoint))
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/auth/request-otp", "/api/v1/auth/verify-otp").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/payments/webhook").permitAll()
-                        .requestMatchers("/pay-test.html", "/log-viewer.html", "/ticket-preview", "/ticket-email-test").permitAll()// TEMP: dev test page, remove before prod
                         .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers("/actuator/**").hasRole("ADMIN")
-                        .requestMatchers("/api/v1/scan/**").hasAnyRole("ADMIN", "SCANNER")
-                        .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/actuator/**").denyAll()
+                        .requestMatchers("/api/v1/scan/**").hasRole("SCANNER")
                         .anyRequest().authenticated())
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)

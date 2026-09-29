@@ -47,7 +47,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             UsernamePasswordAuthenticationToken authentication;
 
-            if ("ADMIN".equals(role) || "SCANNER".equals(role)){
+            if ("SCANNER".equals(role)){
                 String email = jwtService.extractEmail(claims);
                 authentication = new UsernamePasswordAuthenticationToken(email, null, List.of(new SimpleGrantedAuthority("ROLE_"+role)));
             } else{

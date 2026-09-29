@@ -10,9 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-// Public (authenticated-user) listing - deliberately not under /api/v1/admin/**.
-// Falls under the SecurityConfig default anyRequest().authenticated(), same as
-// /users/me and /payments/orders.
+// Authenticated-user listing for the store. Falls under the SecurityConfig
+// default anyRequest().authenticated(), same as /users/me and /payments/orders.
 @RestController
 @RequestMapping("/api/v1/ticket-types")
 @RequiredArgsConstructor

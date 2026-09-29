@@ -66,22 +66,6 @@ public class JwtService {
                 .compact();
     }
 
-    public String generateAdminToken(String email){
-        String jti = UUID.randomUUID().toString();
-        Instant now = Instant.now();
-        Instant expiry = now.plusMillis(expirationMs);
-
-        return Jwts.builder()
-                .subject(email)
-                .claim("email", email)
-                .claim("role", "ADMIN")
-                .id(jti)
-                .issuedAt(Date.from(now))
-                .expiration(Date.from(expiry))
-                .signWith(signingKey)
-                .compact();
-    }
-
     public String extractRole(Claims claims){
         return claims.get("role", String.class);
     }

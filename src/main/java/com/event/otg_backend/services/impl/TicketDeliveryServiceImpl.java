@@ -1,7 +1,6 @@
 package com.event.otg_backend.services.impl;
 
 import com.event.otg_backend.exceptions.EmailSendException;
-import com.event.otg_backend.exceptions.ResourceNotFoundException;
 import com.event.otg_backend.helpers.ticket.QrCodeGenerator;
 import com.event.otg_backend.helpers.ticket.TicketPdfGenerator;
 import com.event.otg_backend.helpers.user.UserNameFormatter;
@@ -40,18 +39,6 @@ public class TicketDeliveryServiceImpl implements TicketDeliveryService {
         }
 
         send(ticket);
-
-
-    }
-
-
-    @Override
-    @Transactional
-    public void resend(int ticketId) {
-
-        Ticket ticket = ticketRepository.findByIdForUpdate(ticketId).orElseThrow(()-> new ResourceNotFoundException("Ticket not found"));
-        send(ticket);
-        log.info("Ticket {} re-sent by admin", ticketId);
     }
 
     private void send(Ticket ticket) {
